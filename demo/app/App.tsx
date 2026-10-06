@@ -33,6 +33,40 @@ const todayIso = () => {
 }
 const md = (iso: string) => `${+iso.slice(5, 7)}/${+iso.slice(8, 10)}`
 
+// Plain-language labels for the drafted BOP ServiceRequest.
+const SERVICE_NAME: Record<string, Pair> = {
+  sauna: ['三溫暖', 'Sauna'], cold_plunge: ['冷泉', 'Cold plunge'], massage: ['按摩', 'Massage'],
+  consultation: ['健康諮詢', 'Consultation'], stretching: ['伸展', 'Stretching']
+}
+const WINDOW_NAME: Record<string, Pair> = { morning: ['早上', 'Morning'], afternoon: ['下午', 'Afternoon'], evening: ['晚上', 'Evening'] }
+const FIELD_NAME: Record<string, Pair> = {
+  service_type: ['服務類型', 'service'], date: ['日期', 'date'], time_window: ['時段', 'time of day'],
+  needs_professional: ['是否找專業者', 'whether a professional is needed'], max_price_twd: ['預算', 'budget']
+}
+const WEEKDAY: Pair[] = [['日', 'Sun'], ['一', 'Mon'], ['二', 'Tue'], ['三', 'Wed'], ['四', 'Thu'], ['五', 'Fri'], ['六', 'Sat']]
+const MONTH_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+function dateLabel(iso: string | null): Pair {
+  if (!iso) return ['待確認', 'to be confirmed']
+  const d = new Date(iso + 'T00:00:00Z'); const w = WEEKDAY[d.getUTCDay()]
+  return [`${d.getUTCMonth() + 1}/${d.getUTCDate()}（週${w[0]}）`, `${w[1]}, ${MONTH_EN[d.getUTCMonth()]} ${d.getUTCDate()}`]
+}
+function requestRows(r: any): [Pair, Pair][] {
+  return [
+    [['服務', 'Service'], SERVICE_NAME[r.service_type] ?? [r.service_type, r.service_type]],
+    [['日期', 'Date'], dateLabel(r.date)],
+    [['時段', 'Time'], r.time_window ? WINDOW_NAME[r.time_window] : ['待確認', 'to be confirmed']],
+    [['找專業者', 'Professional'], r.needs_professional ? ['需要', 'Yes'] : ['不需要', 'No']],
+    [['預算上限', 'Budget limit'], r.max_price_twd != null ? [`NT$${r.max_price_twd.toLocaleString()}`, `NT$${r.max_price_twd.toLocaleString()}`] : ['未指定', 'Not specified']]
+  ]
+}
+function whoDecided(p: Record<string, string>): Pair {
+  const keys = Object.keys(FIELD_NAME).filter(k => p[k] && p[k] !== 'none' && p[k] !== 'missing')
+  const ai = keys.filter(k => p[k] === 'model'), rule = keys.filter(k => p[k].startsWith('rule'))
+  const zh = [ai.length ? `AI判斷：${ai.map(k => FIELD_NAME[k][0]).join('、')}` : '', rule.length ? `規則判讀：${rule.map(k => FIELD_NAME[k][0]).join('、')}` : ''].filter(Boolean).join('；')
+  const en = [ai.length ? `AI decided the ${ai.map(k => FIELD_NAME[k][1]).join(', ')}` : '', rule.length ? `rules read the ${rule.map(k => FIELD_NAME[k][1]).join(', ')}` : ''].filter(Boolean).join('; ')
+  return [zh, en.charAt(0).toUpperCase() + en.slice(1)]
+}
+
 export default function App() {
   const [lang, setLang] = useState<Lang>('both')
   const [status, setStatus] = useState<Pair>(['準備中…', 'Starting…'])
@@ -44,6 +78,7 @@ export default function App() {
   const [summary, setSummary] = useState<any>(null)
   const [utterance, setUtterance] = useState(DEFAULT_ASK.zh)
   const [draft, setDraft] = useState<any>(null)
+  const [showJson, setShowJson] = useState(false)
   const [busy, setBusy] = useState(false)
   const [decoding, setDecoding] = useState<Pair | null>(null)
   const idRef = useRef<string | null>(null)
@@ -184,9 +219,19 @@ export default function App() {
             <Text style={s.btnText}>{label('產生服務請求', 'Draft request')}</Text>
           </Pressable>
           {draft && <>
-            <Text style={s.mono}>{JSON.stringify(draft.request, null, 2)}</Text>
-            <T zh={'來源：' + Object.entries(draft.provenance).map(([k, v]) => `${k}=${v}`).join('、')} en={'Source: ' + Object.entries(draft.provenance).map(([k, v]) => `${k}=${v}`).join(', ')} style={s.meta} />
-            <T zh={`${draft.ms} ms${draft.missing.length ? ` · 需要追問：${draft.missing.join('、')}` : ''}`} en={`${draft.ms} ms${draft.missing.length ? ` · needs follow-up: ${draft.missing.join(', ')}` : ''}`} style={s.meta} />
+            <View style={s.reqBox}>
+              {requestRows(draft.request).map(([k, v], i) => (
+                <View key={i} style={s.reqRow}>
+                  <Text style={s.reqKey}>{label(k[0], k[1])}</Text>
+                  <Text style={s.reqVal}>{lang === 'en' ? v[1] : lang === 'zh' ? v[0] : `${v[0]}  ${v[1]}`}</Text>
+                </View>
+              ))}
+            </View>
+            {(() => { const w = whoDecided(draft.provenance); return <T zh={w[0]} en={w[1]} style={s.meta} /> })()}
+            {draft.missing.length > 0 && <T zh={`還需要跟你確認：${draft.missing.map((k: string) => FIELD_NAME[k][0]).join('、')}`} en={`Still needs your confirmation: ${draft.missing.map((k: string) => FIELD_NAME[k][1]).join(', ')}`} style={s.status} />}
+            <T zh={`在這支手機上處理，耗時 ${(draft.ms / 1000).toFixed(1)} 秒`} en={`Processed on this phone in ${(draft.ms / 1000).toFixed(1)} s`} style={s.meta} />
+            <Pressable onPress={() => setShowJson(v => !v)}><Text style={s.link}>{showJson ? label('隱藏BOP原始資料', 'Hide BOP data') : label('顯示BOP原始資料', 'Show BOP data')}</Text></Pressable>
+            {showJson && <Text style={s.mono}>{JSON.stringify({ type: 'ServiceRequest', ...draft.request, provenance: draft.provenance }, null, 2)}</Text>}
           </>}
         </View>
         {busy && <ActivityIndicator color="#22C55E" />}
@@ -213,6 +258,11 @@ const s = StyleSheet.create({
   meta: { color: '#8E8E99', fontSize: 12 },
   body: { color: 'white', fontSize: 15 },
   question: { color: '#C7F9CC', fontSize: 16, fontWeight: '600' },
+  reqBox: { backgroundColor: '#0F0F14', borderRadius: 8, paddingVertical: 4, paddingHorizontal: 12 },
+  reqRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#2A2B33', gap: 12 },
+  reqKey: { color: '#9AA0AE', fontSize: 14 },
+  reqVal: { color: 'white', fontSize: 15, fontWeight: '600', flexShrink: 1, textAlign: 'right' },
+  link: { color: '#22C55E', fontSize: 13, fontWeight: '600', paddingVertical: 4 },
   mono: { color: '#C7F9CC', fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 13 },
   input: { color: 'white', backgroundColor: '#0F0F14', borderRadius: 8, padding: 10, fontSize: 15, minHeight: 60 },
   btn: { backgroundColor: '#22C55E', borderRadius: 8, paddingVertical: 10, alignItems: 'center' },
