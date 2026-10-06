@@ -34,15 +34,17 @@ export default function VenueScreen({ modelId, p2p }: any) {
       if (m.msg.kind === 'confirm') {
         // Capacity is committed only here, on the venue's own phone.
         const r = requests.find(x => x.id === m.msg.id)
+        if (!r) return // not a request this venue quoted
         const key = `${r?.request?.date ?? ''} ${m.msg.slot}`
         const l = capRef.current[key] ?? 4
-        if (l <= 0) { p2p.send({ kind: 'decline', id: m.msg.id, reasonZh: '這個時段剛好額滿了', reasonEn: 'This slot just filled up' }, 'user'); return }
+        if (l <= 0) { p2p.send({ kind: 'decline', id: m.msg.id, reasonZh: '這個時段剛好額滿了', reasonEn: 'This slot just filled up' }, 'user', m.from); return }
+        capRef.current = { ...capRef.current, [key]: l - 1 } // commit now so simultaneous confirmations see it
         setCapacity(c => ({ ...c, [key]: l - 1 }))
-        const orderNo = 'BOP-' + Date.now().toString(36).toUpperCase().slice(-6)
+        const orderNo = 'BOP-' + (Date.now().toString(36).slice(-3) + m.msg.id.slice(-3)).toUpperCase()
         const o = { kind: 'order', id: m.msg.id, orderNo, slot: m.msg.slot, price: m.msg.price, service: r?.request?.service_type, capacityLeft: l - 1 }
         setOrders(os => [{ ...o, fromName: m.fromName, date: r?.request?.date }, ...os])
         setRequests(rs => rs.map(x => x.id === m.msg.id ? { ...x, status: 'booked' } : x))
-        p2p.send(o, 'user')
+        p2p.send(o, 'user', m.from)
       }
     })
   }, [p2p.ready, requests])
@@ -66,7 +68,7 @@ export default function VenueScreen({ modelId, p2p }: any) {
       const o = offersFor(r.request)
       const desc = inject ? INJECTED : DESC
       const replyEn = `${SERVICE_NAME[r.request.service_type]?.[1]} on ${dateLabel(r.request.date)[1]}: ${o.map(x => x.slot).join(', ')} available, NT$${priceRef.current[r.request.service_type]} per person.`
-      await p2p.send({ kind: 'quote', id: r.id, venue: { nameZh: NAME.zh, nameEn: NAME.en, descZh: desc.zh, descEn: desc.en }, offers: o, replyZh: (res?.final?.contentText ?? '').trim() + (inject ? ' ' + desc.zh : ''), replyEn: replyEn + (inject ? ' ' + desc.en : '') }, 'user')
+      await p2p.send({ kind: 'quote', id: r.id, venue: { nameZh: NAME.zh, nameEn: NAME.en, descZh: desc.zh, descEn: desc.en }, offers: o, replyZh: (res?.final?.contentText ?? '').trim() + (inject ? ' ' + desc.zh : ''), replyEn: replyEn + (inject ? ' ' + desc.en : '') }, 'user', r.from)
     }
     setRequests(rs => rs.map(x => x.status === 'new' ? { ...x, status: 'quoted', batchMs: ms, batchN: pending.length } : x))
   })
@@ -108,7 +110,7 @@ export default function VenueScreen({ modelId, p2p }: any) {
       {!requests.length && <T zh="還沒有詢價。本人Agent按「向場館詢價」後會出現在這裡。場館只會收到服務、日期、時段和預算。" en="No requests yet. They appear when a personal agent taps “Ask the venue for a quote”. The venue only gets service, date, time and budget." style={s.meta} />}
       {requests.map(r => <View key={r.id} style={{ gap: 4 }}>
         <KV rows={requestRows(r.request).filter(([k]) => k[1] !== 'Professional')} />
-        <T zh={{ new: '新請求', quoted: '已報價', booked: '已成立訂單' }[r.status as 'new']} en={r.status} style={r.status === 'booked' ? s.good : s.meta} />
+        <T zh={{ new: '新請求', quoted: '已報價', booked: '已成立訂單' }[r.status as 'new']} en={{ new: 'New', quoted: 'Quoted', booked: 'Booked' }[r.status as 'new']} style={r.status === 'booked' ? s.good : s.meta} />
         {r.batchMs && <T zh={`批次處理：${r.batchN}筆一起產生回覆，共 ${(r.batchMs / 1000).toFixed(1)} 秒`} en={`Batch: ${r.batchN} replies drafted together in ${(r.batchMs / 1000).toFixed(1)} s`} style={s.meta} />}
       </View>)}
       <Btn zh="AI一次回覆所有新請求（批次）" en="AI replies to all new requests (batch)" onPress={replyAll} disabled={!modelId || !requests.some(r => r.status === 'new')} busy={busy === 'batch'} />

@@ -15,7 +15,7 @@ export function T({ zh, en, style }: { zh: string, en: string, style?: any }) {
 }
 export function useLabel() {
   const { lang } = useUi()
-  return (zh: string, en: string) => lang === 'zh' ? zh : lang === 'en' ? en : `${zh} · ${en}`
+  return (zh: string, en: string) => lang === 'zh' || zh === en ? zh : lang === 'en' ? en : `${zh} · ${en}`
 }
 
 export function Card({ children, tint }: { children: any, tint?: boolean }) {
@@ -41,7 +41,7 @@ export function KV({ rows }: { rows: [[string, string], [string, string]][] }) {
   return <View style={s.kvBox}>{rows.map(([k, v], i) => (
     <View key={i} style={s.kvRow}>
       <Text style={s.kvKey}>{label(k[0], k[1])}</Text>
-      <Text style={s.kvVal}>{lang === 'en' ? v[1] : lang === 'zh' ? v[0] : `${v[0]}  ${v[1]}`}</Text>
+      <Text style={s.kvVal}>{lang === 'en' ? v[1] : lang === 'zh' || v[0] === v[1] ? v[0] : `${v[0]}  ${v[1]}`}</Text>
     </View>))}</View>
 }
 

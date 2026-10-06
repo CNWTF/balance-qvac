@@ -39,7 +39,8 @@ export default function ProScreen({ p2p }: any) {
     const r = await translateText(text, 'zh', 'en'); setNoteEn(r.r)
   })
   const accept = () => run('accept', async () => {
-    await p2p.send({ kind: 'pro_reply', id: c.id, decision: 'accept', noteZh, noteEn: noteEn || noteZh }, 'user')
+    const n = await p2p.send({ kind: 'pro_reply', id: c.id, decision: 'accept', noteZh, noteEn: noteEn || noteZh }, 'user', c.from)
+    if (!n) throw new Error(label('本人Agent目前不在線上，回覆沒有送出', 'The personal agent is offline; the reply was not sent'))
     setCases(cs => cs.map(x => x.id === c.id ? { ...x, done: true } : x))
   })
 
@@ -47,7 +48,7 @@ export default function ProScreen({ p2p }: any) {
     <Card>
       <T zh="收到的個案" en="Incoming cases" style={s.h2} />
       {!cases.length && <T zh="還沒有個案。本人Agent按「同意分享給專業者」後會出現在這裡。" en="No cases yet. They appear here when a personal agent taps “Share with professional”." style={s.meta} />}
-      {cases.map(x => <Btn key={x.id} kind={x.id === openId ? 'primary' : 'secondary'} zh={`${x.fromName ?? '本人'} · ${x.share?.range || '示範'}${x.revoked ? '（已撤回）' : x.done ? '（已回覆）' : ''}`} en={`${x.fromName ?? 'Person'} · ${x.share?.range || 'demo'}${x.revoked ? ' (revoked)' : x.done ? ' (replied)' : ''}`} onPress={() => { setOpenId(x.id); setHits(null); setNoteZh(''); setNoteEn('') }} />)}
+      {cases.map(x => <Btn key={x.id} kind={x.id === openId ? 'primary' : 'secondary'} zh={`${x.fromName ?? '本人'}｜${x.share?.range || '示範'}${x.revoked ? '（已撤回）' : x.done ? '（已回覆）' : ''}`} en={`${x.fromName ?? 'Person'} | ${x.share?.range || 'demo'}${x.revoked ? ' (revoked)' : x.done ? ' (replied)' : ''}`} onPress={() => { setOpenId(x.id); setHits(null); setNoteZh(''); setNoteEn('') }} />)}
     </Card>
 
     {c && <Card>

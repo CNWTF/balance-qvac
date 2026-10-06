@@ -15,6 +15,6 @@
     "@qvac/sdk": "0.21.0",
     "@qvac/tts-ggml-android-arm64": "0.10.1",
     "@qvac/tts-ggml-ios": "0.10.1",
-    "qvac-balance-p2p": "file:qvac-balance-p2p"
+    "qvac-balance-p2p": "file:qvac-balance-p2p/qvac-balance-p2p-0.1.1.tgz"
   }
 }

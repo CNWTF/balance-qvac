@@ -46,6 +46,9 @@ function createNode(seedHex) {
     }
     const discovery = node.swarm.join(crypto.hash(b4a.from('balance-bop:' + topic)), { server: true, client: true })
     await discovery.flushed()
+    // Look again every 20 s: on phones an app may sleep in the background or a peer may start later.
+    if (node.refreshTimer) clearInterval(node.refreshTimer)
+    node.refreshTimer = setInterval(() => { discovery.refresh({ client: true, server: true }).catch(() => {}) }, 20000)
     return { publicKey: node.publicKey }
   }
   node.send = (msg, toRole, toKey) => {
@@ -57,7 +60,7 @@ function createNode(seedHex) {
     }
     return sent
   }
-  node.destroy = async () => { if (node.swarm) await node.swarm.destroy() }
+  node.destroy = async () => { if (node.refreshTimer) clearInterval(node.refreshTimer); if (node.swarm) await node.swarm.destroy() }
   return node
 }
 
@@ -84,6 +87,12 @@ export const balanceP2PPlugin = definePlugin({
       responseSchema: z.object({ publicKey: z.string() }),
       streaming: false,
       handler: async (req) => nodes.get(req.modelId).join(req.topic, { name: req.name, role: req.role })
+    }),
+    refresh: defineHandler({
+      requestSchema: z.object({ modelId: z.string() }),
+      responseSchema: z.object({ ok: z.boolean() }),
+      streaming: false,
+      handler: async (req) => { const n = nodes.get(req.modelId); if (n?.swarm) { for (const d of n.swarm.topics()) await d.refresh({ client: true, server: true }).catch(() => {}) } return { ok: true } }
     }),
     send: defineHandler({
       requestSchema: z.object({ modelId: z.string(), msg: z.record(z.string(), z.unknown()), toRole: z.string().optional(), toKey: z.string().optional() }),

@@ -47,6 +47,10 @@ export function extractPriceLimit(text) {
   if ((m = /(?:預算|不超過|不要超過|最多|上限)\s*([\d一二兩三四五六七八九千百]+)\s*(?:元|塊)?/.exec(t))) return zhAmount(m[1])
   if ((m = /([\d一二兩三四五六七八九千百]+)\s*(?:元|塊)?\s*(?:以內|以下)/.exec(t))) return zhAmount(m[1])
   if ((m = /(?:under|below|max(?:imum)?|up to|budget(?: of)?)\s*(?:nt\$|twd\s*)?(\d+)/.exec(t))) return +m[1]
+  // English number words, e.g. spoken "under one thousand" or "below eight hundred"
+  const EN = { one: 1, a: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9 }
+  if ((m = /(?:under|below|up to|max(?:imum)?|budget(?: of)?)\s+(one|a|two|three|four|five|six|seven|eight|nine)\s+(thousand|hundred)(?:\s+(?:and\s+)?(one|two|three|four|five|six|seven|eight|nine)\s+hundred)?/.exec(t)))
+    return EN[m[1]] * (m[2] === 'thousand' ? 1000 : 100) + (m[3] ? EN[m[3]] * 100 : 0)
   return null
 }
 

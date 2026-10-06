@@ -31,3 +31,24 @@ iPhone 18 Pro, iOS 27.0.1, Release build, Expo SDK 54, `@qvac/sdk` 0.21.0, MedPs
 | Airplane mode: ServiceRequest | 533 ms; same correct result |
 
 Screenshots: `p1/screens/` (synthetic data only).
+
+## Three role apps on Galaxy A32 5G (2026-10-07 00:20–01:03)
+
+Galaxy A32 5G (SM-A326BR/DS, 6 GB, Android 13, Mali GPU so CPU only). Three APKs from one codebase (Android product flavors). Peers: the A32 apps and desktop stand-ins (`p2p/agent_bot.mjs`, `p2p/user_bot.mjs`) using the same QVAC P2P plugin.
+
+| Step | Result |
+|---|---|
+| P2P plugin (Hyperswarm inside the QVAC worker) on Android | Online on the phone; phone ↔ PC connected in 1–2 s once both were in the foreground |
+| Two apps on the same phone | Unreliable: the background app is not reachable (Android limits background network). The demo puts each role on its own device |
+| Venue: batch replies (Qwen3-0.6B, `batchCompletion`) | 2 replies in 10.9 s; confirm → capacity committed on the venue phone → order sent |
+| Professional: RAG (EmbeddingGemma 300M Q4 + QVAC RAG) | 52 s incl. first download and ingest; top hits K3, K8, K5 all relevant |
+| Professional: Bergamot zh→en | Runs on the phone; quality poor for this domain ("three small beams"); the app labels it as machine translation to check |
+| Personal: weekly summary (real data, MedPsy-1.7B, CPU) | 14.9 s, Q01; bilingual sentences |
+| Personal: read aloud (Supertonic 3 Q4, English) | Played on the phone (system audio focus at 00:39:08) |
+| Personal: draft request | 16.9–21.1 s |
+| Personal ↔ PC professional and venue | share → pro reply → quote → confirm → order BOP-WWNZLO |
+| Safety: over budget | NT$1,500 quote vs NT$1,000 limit → agent stops, "Book this slot anyway" |
+| Safety: prompt injection in venue text | Flagged, treated as data, nothing sent |
+| Not tested on the phone yet | Voice input (Whisper), photo → classify → VisionPsy / OCR, Japanese read-aloud (desktop tests passed for classify, ASR, OCR, VisionPsy) |
+
+Screenshots in `p1/screens/a32_*.png` contain demo data only.

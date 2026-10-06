@@ -1,7 +1,8 @@
 // React hook around the qvac-balance-p2p plugin: Hyperswarm inside the QVAC worker, Noise-encrypted, no server.
 import { useEffect, useRef, useState } from 'react'
+import { AppState } from 'react-native'
 import * as FileSystem from 'expo-file-system/legacy'
-import { openP2P, joinTopic, sendMessage, pollMessages } from 'qvac-balance-p2p'
+import { openP2P, joinTopic, sendMessage, pollMessages, refreshP2P } from 'qvac-balance-p2p'
 import { Role, TOPIC } from './roles'
 
 export type Peer = { publicKey: string, name: string, role: string }
@@ -52,9 +53,17 @@ export function useP2P(role: Role, name: string, enabled: boolean) {
     return () => { stop = true; if (timer) clearInterval(timer) }
   }, [enabled])
 
-  const send = async (msg: any, toRole?: Role) => {
+  // Coming back to the foreground: look for peers again right away.
+  useEffect(() => {
+    if (!modelId) return
+    const sub = AppState.addEventListener('change', st => { if (st === 'active') refreshP2P({ modelId }).catch(() => {}) })
+    return () => sub.remove()
+  }, [modelId])
+
+  // toKey addresses one agent by public key; toRole alone reaches every agent with that role.
+  const send = async (msg: any, toRole?: Role, toKey?: string) => {
     if (!modelId) return 0
-    const r: any = await sendMessage({ modelId, msg, toRole })
+    const r: any = await sendMessage({ modelId, msg, toRole, toKey })
     return r.sent as number
   }
   const onMessage = (h: (m: Inbound) => void) => { handlers.current = [h] }

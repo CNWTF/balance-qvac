@@ -61,7 +61,8 @@
           "microphonePermission": "Balance listens when you tap Speak and transcribes on this phone."
         }
       ],
-      "./plugins/withRoleFlavors"
+      "./plugins/withRoleFlavors",
+      "expo-asset"
     ]
   }
 }

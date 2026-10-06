@@ -15,6 +15,12 @@ import { newId, requestRows, money, looksLikeInstruction, SERVICE_NAME, Pair } f
 const DEMO_FACTS = { F1: '這週三溫暖3次', F2: '平均每次42分鐘', F3: '平均睡眠6小時18分（前一段6小時52分）', F4: '三溫暖當晚平均睡眠6小時51分（3晚）', F5: '沒去三溫暖的晚上平均睡眠5小時54分（4晚）' }
 const DEMO_FACTS_EN = { F1: 'This week: sauna 3 times', F2: '42 min on average', F3: 'Average sleep 6h 18m (previous week 6h 52m)', F4: 'Nights after sauna: 6h 51m of sleep on average (3 nights)', F5: 'nights without sauna: 5h 54m (4 nights)' }
 const DEMO_HINTS = ['這週有去三溫暖', '三溫暖當晚比沒去的晚上睡得久', '這週平均睡眠比前一週短']
+// One-tap example requests for demos (no typing on stage).
+const EXAMPLES: { zh: string, en: string, label: [string, string] }[] = [
+  { zh: '這週睡不好，週六晚上想去三溫暖，也想找健康管理師聊聊', en: "I slept badly this week. I'd like a sauna on Saturday evening and a chat with a health coach.", label: ['三溫暖＋專業者', 'Sauna + coach'] },
+  { zh: '週六晚上想按摩，預算1000以內', en: 'Massage on Saturday evening, under 1000 TWD', label: ['按摩，預算1000', 'Massage, budget 1000'] },
+  { zh: '明天早上冷泉，自己去就好', en: 'Cold plunge tomorrow morning, on my own', label: ['明早冷泉', 'Cold plunge tomorrow'] }
+]
 export const DEFAULT_ASK = { zh: '這週睡不好，週六晚上想去三溫暖，也想找健康管理師聊聊', en: "I slept badly this week. I'd like a sauna on Saturday evening and a chat with a health coach." }
 const md = (iso: string) => `${+iso.slice(5, 7)}/${+iso.slice(8, 10)}`
 const todayIso = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
@@ -125,7 +131,8 @@ export default function UserScreen({ modelId, p2p, utterance, setUtterance }: an
     setQuote({ waiting: true })
   })
   const confirmOffer = (o: any) => run('confirm', async () => {
-    await p2p.send({ kind: 'confirm', id: caseId.current, slot: o.slot, price: o.price, receipt: { approvedBy: 'user', at: Date.now() } }, 'venue')
+    const n = await p2p.send({ kind: 'confirm', id: caseId.current, slot: o.slot, price: o.price, receipt: { approvedBy: 'user', at: Date.now() } }, 'venue', quote.from)
+    if (!n) throw new Error(label('這個場館目前不在線上', 'This venue is offline'))
   })
 
   const budget = draft?.request?.max_price_twd
@@ -182,6 +189,7 @@ export default function UserScreen({ modelId, p2p, utterance, setUtterance }: an
 
     <Card>
       <T zh="說出需求 → BOP服務請求" en="Say what you need → BOP ServiceRequest" style={s.h2} />
+      <Row>{EXAMPLES.map((e, i) => <Btn key={i} kind="secondary" zh={e.label[0]} en={e.label[1]} onPress={() => setUtterance(lang === 'en' ? e.en : e.zh)} />)}</Row>
       <TextInput style={s.input} value={utterance} onChangeText={setUtterance} multiline />
       <Row>
         <Btn kind="secondary" zh={recording ? '■ 停止並辨識' : '🎤 用說的'} en={recording ? '■ Stop & transcribe' : '🎤 Speak'} onPress={toggleRecord} busy={busy === 'voice' && !recording} />
