@@ -3,7 +3,7 @@
 // It never receives health data.
 import React, { useEffect, useRef, useState } from 'react'
 import { Alert, Switch, Text, TextInput, View } from 'react-native'
-import * as ImagePicker from 'expo-image-picker'
+import { pickImage } from '../lib/picker'
 import { batchCompletion } from '@qvac/sdk'
 import { T, Card, Btn, Row, KV, s, useLabel } from '../lib/ui'
 import { ocrPhoto } from '../lib/caps'
@@ -74,9 +74,9 @@ export default function VenueScreen({ modelId, p2p }: any) {
   })
 
   const readPriceList = (camera: boolean) => run('ocr', async () => {
-    const pick = camera ? await ImagePicker.launchCameraAsync({ quality: 0.8 }) : await ImagePicker.launchImageLibraryAsync({ quality: 0.8, mediaTypes: ['images'] })
-    if (pick.canceled) return
-    const r = await ocrPhoto(pick.assets[0].uri)
+    const uri = await pickImage(camera)
+    if (!uri) return
+    const r = await ocrPhoto(uri)
     const nums = r.r.join(' ').match(/\d{3,4}/g) ?? []
     setOcrText({ text: r.r.join(' '), nums, ms: r.ms })
   })

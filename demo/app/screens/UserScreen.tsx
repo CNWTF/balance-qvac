@@ -2,7 +2,7 @@
 // ask a venue for a quote, confirm within the delegated budget. Health data never goes to the venue.
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Alert, Text, TextInput, View } from 'react-native'
-import * as ImagePicker from 'expo-image-picker'
+import { pickImage } from '../lib/picker'
 import { useAudioRecorder, RecordingPresets, AudioModule, setAudioModeAsync } from 'expo-audio'
 import { T, Card, Btn, Row, KV, s, useUi, useLabel } from '../lib/ui'
 import { draftServiceRequest } from '../lib/intent'
@@ -94,9 +94,8 @@ export default function UserScreen({ modelId, p2p, utterance, setUtterance }: an
   })
 
   const takePhoto = (camera: boolean) => run('photo', async () => {
-    const pick = camera ? await ImagePicker.launchCameraAsync({ quality: 0.7 }) : await ImagePicker.launchImageLibraryAsync({ quality: 0.7, mediaTypes: ['images'] })
-    if (pick.canceled) return
-    const uri = pick.assets[0].uri
+    const uri = await pickImage(camera, 0.7)
+    if (!uri) return
     setPhoto({ uri, step: 'classify' })
     const c = await classifyPhoto(uri)
     const top = [...c.r].sort((a: any, b: any) => b.confidence - a.confidence)[0]

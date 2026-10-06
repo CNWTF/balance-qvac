@@ -8,7 +8,7 @@ UDID=00008160-001C03EA3A800036
 TEAM=94RY9N46FJ
 APP_DIR=~/qvac-demo/balance-app
 PLIST=$APP_DIR/ios/Balance/Info.plist
-ROLES=(${@:-user pro venue})
+if (( $# )); then ROLES=("$@"); else ROLES=(user pro venue); fi  # zsh does not word-split ${@:-...}
 cd $APP_DIR
 cp $PLIST /tmp/Balance.Info.plist.bak
 trap 'cp /tmp/Balance.Info.plist.bak $PLIST' EXIT
