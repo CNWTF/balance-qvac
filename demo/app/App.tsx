@@ -24,6 +24,7 @@ const DEMO_FACTS_EN = {
 const DEMO_HINTS = ['這週有去三溫暖', '三溫暖當晚比沒去的晚上睡得久', '這週平均睡眠比前一週短']
 
 type Lang = 'both' | 'zh' | 'en'
+const DEFAULT_ASK = { zh: '這週睡不好，週六晚上想去三溫暖，也想找健康管理師聊聊', en: "I slept badly this week. I'd like a sauna on Saturday evening and a chat with a health coach." }
 type Pair = [string, string]
 
 const todayIso = () => {
@@ -41,7 +42,7 @@ export default function App() {
   const [data, setData] = useState<any>(null)
   const [week, setWeek] = useState(0)
   const [summary, setSummary] = useState<any>(null)
-  const [utterance, setUtterance] = useState('這週睡不好，週六晚上想去三溫暖，也想找健康管理師聊聊')
+  const [utterance, setUtterance] = useState(DEFAULT_ASK.zh)
   const [draft, setDraft] = useState<any>(null)
   const [busy, setBusy] = useState(false)
   const [decoding, setDecoding] = useState<Pair | null>(null)
@@ -126,7 +127,11 @@ export default function App() {
       <ScrollView contentContainerStyle={s.container} keyboardShouldPersistTaps="handled">
         <View style={s.langRow}>
           {(['both', 'zh', 'en'] as Lang[]).map(l => (
-            <Pressable key={l} style={[s.langBtn, lang === l && s.langOn]} onPress={() => setLang(l)}>
+            <Pressable key={l} style={[s.langBtn, lang === l && s.langOn]} onPress={() => {
+              setLang(l)
+              // Swap the sample sentence only if the person has not edited it.
+              setUtterance(u => u === DEFAULT_ASK.zh || u === DEFAULT_ASK.en ? (l === 'en' ? DEFAULT_ASK.en : DEFAULT_ASK.zh) : u)
+            }}>
               <Text style={[s.langText, lang === l && s.langTextOn]}>{l === 'both' ? '中英' : l === 'zh' ? '中文' : 'EN'}</Text>
             </Pressable>
           ))}
