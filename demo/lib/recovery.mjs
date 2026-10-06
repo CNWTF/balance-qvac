@@ -45,6 +45,7 @@ export function sleepNights(sleepRecords) {
 const addDays = (iso, n) => { const d = new Date(iso + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return isoDate(d) }
 const mean = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null
 export const fmtHM = m => m == null ? '—' : `${Math.floor(m / 60)}小時${pad(Math.round(m % 60))}分`
+export const fmtHMEn = m => m == null ? '—' : `${Math.floor(m / 60)}h ${pad(Math.round(m % 60))}m`
 
 // Facts for the window ending on endDate (inclusive). A night "after sauna" is the sleep that ends the day after a sauna day.
 export function recoveryFacts(sessions, nights, endDate, days = 7) {
@@ -90,4 +91,14 @@ export function qualitativeHints(f, minDiff = 15) {
     cmp(f.sleepAfterSaunaMean, f.sleepOtherMean, '三溫暖當晚比沒去的晚上睡得久', '三溫暖當晚比沒去的晚上睡得短', '三溫暖當晚和沒去的晚上睡眠時間差不多'),
     cmp(f.sleepMeanMinutes, f.sleepMeanMinutesPrev, '這週平均睡眠比前一週長', '這週平均睡眠比前一週短', '這週平均睡眠和前一週差不多')
   ].filter(Boolean)
+}
+
+export function factTableEn(f, label = 'This week') {
+  return {
+    F1: `${label}: sauna ${f.saunaCount} time${f.saunaCount === 1 ? '' : 's'}`,
+    F2: f.saunaMeanMinutes == null ? 'no sauna sessions' : `${Math.round(f.saunaMeanMinutes)} min on average`,
+    F3: `Average sleep ${fmtHMEn(f.sleepMeanMinutes)} (previous week ${fmtHMEn(f.sleepMeanMinutesPrev)})`,
+    F4: `Nights after sauna: ${fmtHMEn(f.sleepAfterSaunaMean)} of sleep on average (${f.nightsAfterSauna} nights)`,
+    F5: `nights without sauna: ${fmtHMEn(f.sleepOtherMean)} (${f.nightsOther} nights)`
+  }
 }

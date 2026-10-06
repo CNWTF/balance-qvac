@@ -8,15 +8,20 @@ import { eligibleQuestions } from './questions'
 const SYS = '你是非醫療的恢復紀錄整理助理。根據本人這週的觀察，從候選問題中選出一題最值得本人拿去請教健康管理師的問題，只回傳它的代號。' +
   '優先選和這週最明顯的變化有關、能直接討論下週安排的問題。'
 
-export function renderFacts(facts) {
+// Returns one sentence per entry; lang 'zh' or 'en'.
+export function factSentences(facts, lang = 'zh') {
+  const zh = lang === 'zh'
+  const cite = ids => zh ? `［${ids.join('、')}］` : ` [${ids.join(', ')}]`
   const lines = []
-  const head = [facts.F1, facts.F2].filter(Boolean).join('，')
-  if (head) lines.push(`${head}［${['F1', 'F2'].filter(k => facts[k]).join('、')}］`)
-  if (facts.F4 && facts.F5) lines.push(`${facts.F4}，對照${facts.F5}［F4、F5］`)
-  else for (const k of ['F4', 'F5']) if (facts[k]) lines.push(`${facts[k]}［${k}］`)
-  if (facts.F3) lines.push(`${facts.F3}［F3］`)
-  return lines.join('。') + '。'
+  const headIds = ['F1', 'F2'].filter(k => facts[k])
+  if (headIds.length) lines.push(headIds.map(k => facts[k]).join(zh ? '，' : ', ') + cite(headIds))
+  if (facts.F4 && facts.F5) lines.push((zh ? `${facts.F4}，對照${facts.F5}` : `${facts.F4}; ${facts.F5}`) + cite(['F4', 'F5']))
+  else for (const k of ['F4', 'F5']) if (facts[k]) lines.push(facts[k] + cite([k]))
+  if (facts.F3) lines.push(facts.F3 + cite(['F3']))
+  return lines.map(l => l + (zh ? '。' : '.'))
 }
+
+export function renderFacts(facts) { return factSentences(facts, 'zh').join('') }
 
 export async function buildSummary(modelId, facts, hints) {
   const candidates = eligibleQuestions(hints)
@@ -41,6 +46,6 @@ export async function buildSummary(modelId, facts, hints) {
   let pick = null
   try { pick = parseFirstJson(f.contentText).pick } catch { /* fall through */ }
   const chosen = candidates.find(q => q.id === pick) ?? candidates[0] // fallback keeps the demo deterministic
-  return { questionId: chosen.id, question: chosen.text, modelPicked: chosen.id === pick, candidates: candidates.map(q => q.id),
+  return { questionId: chosen.id, question: chosen.text, questionEn: chosen.en, modelPicked: chosen.id === pick, candidates: candidates.map(q => q.id),
     body, text: body + `想請教專業者：${chosen.text}`, ms: Date.now() - t0 }
 }
