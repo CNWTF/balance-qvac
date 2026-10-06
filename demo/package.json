@@ -1,0 +1,13 @@
+{
+  "name": "balance-qvac-demo",
+  "version": "0.1.0",
+  "description": "Balance Recovery Agents demo on QVAC",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "dependencies": {
+    "@garmin/fitsdk": "21.217.0",
+    "@qvac/cli": "0.15.0",
+    "@qvac/sdk": "0.21.0"
+  }
+}

@@ -1,0 +1,4 @@
+node_modules/
+p1/results/
+private/
+*.gguf
