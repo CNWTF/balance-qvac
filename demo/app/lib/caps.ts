@@ -37,10 +37,15 @@ export const describePhoto = (uri: string, lang: 'zh' | 'en') => timed(() => wit
   }))
 
 // OCR (Latin script: prices, times, English text)
-export const ocrPhoto = (uri: string) => timed(() => withModel({ modelSrc: (OCR_LATIN as any).src, modelType: 'ggml-ocr' }, async (modelId) => {
+// canvasSize caps the detector input: a 48 MP phone photo otherwise fails to allocate the graph on iPhone.
+// If the GPU path still fails, retry once on the CPU.
+const runOcr = (uri: string, extra: any) => withModel({ modelSrc: (OCR_LATIN as any).src, modelType: 'ggml-ocr', modelConfig: { canvasSize: 1280, magRatio: 1, ...extra } }, async (modelId) => {
   const blocks = await ocr({ modelId, image: localPath(uri) }).blocks
   return blocks.map((b: any) => b.text).filter(Boolean)
-}))
+})
+export const ocrPhoto = (uri: string) => timed(async () => {
+  try { return await runOcr(uri, {}) } catch { return runOcr(uri, { backendDevice: 'cpu' }) }
+})
 
 // Speech to text (Whisper base, multilingual)
 export const transcribeAudio = (uri: string, lang: 'zh' | 'en') => timed(() => withModel(
