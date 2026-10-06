@@ -1,0 +1,31 @@
+{
+  "name": "balance-app",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@qvac/fabric-ios": "0.18.1",
+    "@qvac/sdk": "^0.21.0",
+    "bare-rpc": "^1.3.8",
+    "expo": "~54.0.36",
+    "expo-build-properties": "~1.0.10",
+    "expo-device": "~8.0.10",
+    "expo-file-system": "~19.0.24",
+    "expo-status-bar": "~3.0.9",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-bare-kit": "^0.15.6",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/react": "~19.1.0",
+    "bare-pack": "^1.5.1",
+    "typescript": "~5.9.2"
+  },
+  "private": true
+}
