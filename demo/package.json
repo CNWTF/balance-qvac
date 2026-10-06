@@ -7,7 +7,14 @@
   "type": "module",
   "dependencies": {
     "@garmin/fitsdk": "21.217.0",
+    "@qvac/asr-ggml-android-arm64": "0.7.0",
+    "@qvac/asr-ggml-ios": "0.7.0",
     "@qvac/cli": "0.15.0",
-    "@qvac/sdk": "0.21.0"
+    "@qvac/fabric-android-arm64": "0.18.1",
+    "@qvac/fabric-ios": "0.18.1",
+    "@qvac/sdk": "0.21.0",
+    "@qvac/tts-ggml-android-arm64": "0.10.1",
+    "@qvac/tts-ggml-ios": "0.10.1",
+    "qvac-balance-p2p": "file:qvac-balance-p2p"
   }
 }

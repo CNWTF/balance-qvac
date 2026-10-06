@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Balance Agent",
+    "name": "Balance",
     "slug": "balance-agent",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -47,7 +47,21 @@
           "installMissingPrebuilds": true
         }
       ],
-      "./plugins/withIosScene"
+      "./plugins/withIosScene",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Balance uses the camera to log meals and scan price lists on this phone.",
+          "photosPermission": "Balance reads a photo you pick to describe it on this phone."
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Balance listens when you tap Speak and transcribes on this phone."
+        }
+      ],
+      "./plugins/withRoleFlavors"
     ]
   }
 }

@@ -1,0 +1,18 @@
+{
+  "name": "qvac-balance-p2p",
+  "version": "0.1.0",
+  "description": "QVAC custom plugin: Balance agents exchange BOP messages over Hyperswarm (Noise-encrypted, no server).",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": { "import": "./client.js" },
+    "./plugin": { "import": "./plugin.js" }
+  },
+  "peerDependencies": {
+    "@qvac/sdk": ">=0.21.0",
+    "zod": "*",
+    "hyperswarm": "*",
+    "hypercore-crypto": "*",
+    "b4a": "*"
+  }
+}

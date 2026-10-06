@@ -19,3 +19,14 @@ export function b64ToBytes(b64) {
   return out
 }
 
+
+// Bytes to base64 (for writing generated audio files).
+export function bytesToB64(bytes) {
+  let out = ''
+  for (let i = 0; i < bytes.length; i += 3) {
+    const a = bytes[i], b = bytes[i + 1], c = bytes[i + 2]
+    const n = (a << 16) | ((b ?? 0) << 8) | (c ?? 0)
+    out += B64[(n >> 18) & 63] + B64[(n >> 12) & 63] + (b === undefined ? '=' : B64[(n >> 6) & 63]) + (c === undefined ? '=' : B64[n & 63])
+  }
+  return out
+}
