@@ -19,11 +19,11 @@ try {
   modelId = await loadModel({ modelSrc: MODEL, modelType: 'llamacpp-completion', modelConfig: { ctx_size: 4096 } })
   const outs = []
   for (let i = 0; i < runs; i++) outs.push(await buildSummary(modelId, table, qualitativeHints(facts)))
-  const report = { endDate, facts, table, hints: qualitativeHints(facts), outputs: outs.map(o => ({ text: o.text, question: o.question, attempts: o.attempts, rejected: o.rejected, ms: o.ms })) }
+  const report = { endDate, facts, table, hints: qualitativeHints(facts), outputs: outs.map(o => ({ text: o.text, questionId: o.questionId, modelPicked: o.modelPicked, candidates: o.candidates, ms: o.ms })) }
   const file = join(pack, `real_summary_${endDate}.json`)
   writeFileSync(file, JSON.stringify(report, null, 2))
   console.log('FACTS'); for (const [k, v] of Object.entries(table)) console.log(`  ${k} ${v}`)
-  outs.forEach((o, i) => console.log(`RUN${i + 1} (${o.ms} ms, attempts=${o.attempts}): ${o.text}`))
+  outs.forEach((o, i) => console.log(`RUN${i + 1} (${o.ms} ms, ${o.questionId}, modelPicked=${o.modelPicked}): ${o.text}`))
   console.log('written', file)
 } catch (e) { console.error('ERROR', e); process.exitCode = 1 } finally {
   if (modelId) await unloadModel({ modelId, clearStorage: false })
