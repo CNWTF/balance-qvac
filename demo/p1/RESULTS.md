@@ -26,3 +26,8 @@ iPhone 18 Pro, iOS 27.0.1, Release build, Expo SDK 54, `@qvac/sdk` 0.21.0, MedPs
 | First launch: download + load | 72.4 s (includes the 1.28 GB download over Wi-Fi) |
 | Weekly summary (model picks question) | 767 ms, picked Q07 |
 | Intent → ServiceRequest (default sentence) | 526 ms; sauna / 2026-10-10 / evening / professional: all correct |
+| Airplane mode, app relaunched: load from device | 2.0 s |
+| Airplane mode: weekly summary | 471 ms, Q07 |
+| Airplane mode: ServiceRequest | 533 ms; same correct result |
+
+Screenshots: `p1/screens/` (synthetic data only).
