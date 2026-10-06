@@ -34,11 +34,13 @@ export default function App() {
   const [utterance, setUtterance] = useState('這週睡不好，週六晚上想去三溫暖，也想找健康管理師聊聊')
   const [draft, setDraft] = useState<any>(null)
   const [busy, setBusy] = useState(false)
+  const [decoding, setDecoding] = useState<string | null>(null)
   const idRef = useRef<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
-    loadStoredPack().then(d => { if (!cancelled && d) setData(d) }).catch(() => {})
+    const onProg = (i: number, n: number) => { if (!cancelled) setDecoding(`正在手機上解碼你的FIT檔…${i}/${n}`) }
+    loadStoredPack(onProg).then(d => { if (!cancelled && d) setData(d) }).catch((e: any) => { if (!cancelled) setDecoding('讀取資料失敗：' + (e?.message ?? String(e))) }).finally(() => { if (!cancelled) setDecoding(d => d?.startsWith('讀取資料失敗') ? d : null) })
     ;(async () => {
       try {
         setStatus('下載／載入MedPsy-1.7B…')
@@ -72,9 +74,10 @@ export default function App() {
   const importPack = async () => {
     setBusy(true)
     try {
-      const d = await pickAndStorePack()
+      const d = await pickAndStorePack((i: number, n: number) => setDecoding(`正在手機上解碼你的FIT檔…${i}/${n}`))
       if (d) { setData(d); setWeek(0); setSummary(null) }
     } catch (e: any) { Alert.alert('匯入失敗', e?.message ?? String(e)) }
+    setDecoding(null)
     setBusy(false)
   }
   const removePack = async () => { await clearStoredPack(); setData(null); setSummary(null) }
@@ -106,6 +109,7 @@ export default function App() {
 
         <View style={s.card}>
           <Text style={s.h2}>我的資料</Text>
+          {decoding && <Text style={s.status}>{decoding}</Text>}
           {data
             ? <Text style={s.meta}>已匯入：{data.fitCount}個三溫暖FIT檔與{data.nights.length}晚睡眠紀錄，匯入時在手機上解碼耗時{data.decodeMs} ms{data.fromCache ? '（本次開啟沿用解碼結果）' : ''}。資料只存在這支手機。</Text>
             : <Text style={s.meta}>尚未匯入。選取Balance資料包（.json），FIT檔會在手機上解碼。</Text>}

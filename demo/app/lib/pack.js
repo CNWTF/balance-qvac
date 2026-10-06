@@ -7,31 +7,39 @@ import { b64ToBytes } from './b64'
 
 const STORE = FileSystem.documentDirectory + 'balance_pack.json'
 const DECODED = FileSystem.documentDirectory + 'balance_decoded.json' // decoded once on this phone, reused on later launches
-export function decodePack(text) {
+const yieldToUi = () => new Promise(r => setTimeout(r, 0))
+
+// Decodes one FIT file at a time and yields between files so the UI stays responsive (slow phones take ~40 s).
+export async function decodePack(text, onProgress) {
   const p = JSON.parse(text)
   if (p.kind !== 'balance-pack') throw new Error('不是Balance資料包')
   const t0 = Date.now()
-  const sessions = p.fit.map(f => parseSaunaFit(b64ToBytes(f.b64)))
+  const sessions = []
+  for (let i = 0; i < p.fit.length; i++) {
+    sessions.push(parseSaunaFit(b64ToBytes(p.fit[i].b64)))
+    if (onProgress) onProgress(i + 1, p.fit.length)
+    await yieldToUi()
+  }
   const nights = sleepNights(p.sleep)
   return { sessions, nights, range: p.range, fitCount: p.fit.length, decodeMs: Date.now() - t0 }
 }
 
-export async function pickAndStorePack() {
+export async function pickAndStorePack(onProgress) {
   const r = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true, multiple: false })
   if (r.canceled) return null
   const text = await FileSystem.readAsStringAsync(r.assets[0].uri)
-  const data = decodePack(text) // validate before keeping it
+  const data = await decodePack(text, onProgress) // validate before keeping it
   await FileSystem.writeAsStringAsync(STORE, text)
   await FileSystem.writeAsStringAsync(DECODED, JSON.stringify(data))
   return data
 }
 
-export async function loadStoredPack() {
+export async function loadStoredPack(onProgress) {
   const cached = await FileSystem.getInfoAsync(DECODED)
   if (cached.exists) return { ...JSON.parse(await FileSystem.readAsStringAsync(DECODED)), fromCache: true }
   const info = await FileSystem.getInfoAsync(STORE)
   if (!info.exists) return null
-  const data = decodePack(await FileSystem.readAsStringAsync(STORE))
+  const data = await decodePack(await FileSystem.readAsStringAsync(STORE), onProgress)
   await FileSystem.writeAsStringAsync(DECODED, JSON.stringify(data))
   return data
 }
