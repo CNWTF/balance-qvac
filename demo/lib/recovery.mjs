@@ -81,3 +81,13 @@ export function factTable(f, label = '這段期間') {
   }
   return t
 }
+
+// Digit-free, direction-only statements for the model. Directions are computed here, not inferred by the model.
+export function qualitativeHints(f, minDiff = 15) {
+  const cmp = (a, b, more, less, same) => a == null || b == null ? null : (a - b >= minDiff ? more : b - a >= minDiff ? less : same)
+  return [
+    f.saunaCount > 0 ? '這週有去三溫暖' : '這週沒有去三溫暖',
+    cmp(f.sleepAfterSaunaMean, f.sleepOtherMean, '三溫暖當晚比沒去的晚上睡得久', '三溫暖當晚比沒去的晚上睡得短', '三溫暖當晚和沒去的晚上睡眠時間差不多'),
+    cmp(f.sleepMeanMinutes, f.sleepMeanMinutesPrev, '這週平均睡眠比前一週長', '這週平均睡眠比前一週短', '這週平均睡眠和前一週差不多')
+  ].filter(Boolean)
+}

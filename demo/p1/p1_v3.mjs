@@ -22,7 +22,7 @@ try {
   modelId = await loadModel({ modelSrc: MODEL, modelType: 'llamacpp-completion', modelConfig: { ctx_size: 4096 } })
   out.loadMs = Date.now() - t0
   const sums = []
-  for (let i = 0; i < 3; i++) sums.push(await buildSummary(modelId, SYNTH))
+  for (let i = 0; i < 3; i++) sums.push(await buildSummary(modelId, SYNTH, ['這週有去三溫暖', '三溫暖當晚比沒去的晚上睡得久', '這週平均睡眠比前一週短']))
   out.summary = sums
   sums.forEach(s => console.log('[summary]', s.text, `(${s.ms} ms)`))
   for (const [name, set] of [['tuned', INTENTS], ['heldout', HELDOUT]]) {
