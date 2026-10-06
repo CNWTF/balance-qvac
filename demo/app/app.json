@@ -46,7 +46,8 @@
         {
           "installMissingPrebuilds": true
         }
-      ]
+      ],
+      "./plugins/withIosScene"
     ]
   }
 }

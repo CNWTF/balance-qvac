@@ -9,6 +9,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@qvac/fabric-android-arm64": "0.18.1",
     "@qvac/fabric-ios": "0.18.1",
     "@qvac/sdk": "^0.21.0",
     "bare-rpc": "^1.3.8",
