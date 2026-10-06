@@ -3,6 +3,7 @@
 import { Platform } from 'react-native'
 import * as FileSystem from 'expo-file-system/legacy'
 import { createAudioPlayer } from 'expo-audio'
+import { Asset } from 'expo-asset'
 import {
   loadModel, unloadModel, classify, ocr, transcribe, textToSpeech, translate, ragIngest, ragSearch, completion,
   WHISPER_BASE_Q8_0, TTS_MULTILINGUAL_SUPERTONIC3_Q4_0, BERGAMOT_ZH_EN, BERGAMOT_EN_ZH,
@@ -20,10 +21,20 @@ async function withModel<T>(opts: any, fn: (id: string) => Promise<T>): Promise<
 }
 const timed = async <T>(fn: () => Promise<T>) => { const t0 = Date.now(); const r = await fn(); return { r, ms: Date.now() - t0 } }
 
-// Image classification (built-in MobileNetV3: food / report / other; no download)
+// Image classification (QVAC's MobileNetV3: food / report / other). Its weights are not in QVAC's mobile
+// worker bundle, so the app ships the same 3 MB GGUF as an asset and passes the local path.
+let classifierPath: string | null = null
+async function classifierSrc() {
+  if (!classifierPath) {
+    const a = Asset.fromModule(require('../assets/models/mobilenetv3_3class_v3_fp16.gguf'))
+    await a.downloadAsync()
+    classifierPath = localPath(a.localUri ?? a.uri)
+  }
+  return classifierPath
+}
 export const classifyPhoto = (uri: string) => timed(async () => {
   const bytes = b64ToBytes(await FileSystem.readAsStringAsync(uri, { encoding: 'base64' }))
-  return withModel({ modelType: 'ggml-classification' }, (modelId) => classify({ modelId, image: bytes }))
+  return withModel({ modelSrc: await classifierSrc(), modelType: 'ggml-classification' }, (modelId) => classify({ modelId, image: bytes }))
 })
 
 // VisionPsy (multimodal) describes a photo, e.g. a meal; one sentence, non-medical.
