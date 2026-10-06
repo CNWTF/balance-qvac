@@ -9,6 +9,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@garmin/fitsdk": "^21.217.0",
     "@qvac/fabric-android-arm64": "0.18.1",
     "@qvac/fabric-ios": "0.18.1",
     "@qvac/sdk": "^0.21.0",
@@ -16,6 +17,7 @@
     "expo": "~54.0.36",
     "expo-build-properties": "~1.0.10",
     "expo-device": "~8.0.10",
+    "expo-document-picker": "~14.0.8",
     "expo-file-system": "~19.0.24",
     "expo-status-bar": "~3.0.9",
     "react": "19.1.0",
