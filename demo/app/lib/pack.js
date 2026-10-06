@@ -6,6 +6,7 @@ import { parseSaunaFit, sleepNights } from './recovery'
 import { b64ToBytes } from './b64'
 
 const STORE = FileSystem.documentDirectory + 'balance_pack.json'
+const DECODED = FileSystem.documentDirectory + 'balance_decoded.json' // decoded once on this phone, reused on later launches
 export function decodePack(text) {
   const p = JSON.parse(text)
   if (p.kind !== 'balance-pack') throw new Error('不是Balance資料包')
@@ -21,17 +22,23 @@ export async function pickAndStorePack() {
   const text = await FileSystem.readAsStringAsync(r.assets[0].uri)
   const data = decodePack(text) // validate before keeping it
   await FileSystem.writeAsStringAsync(STORE, text)
+  await FileSystem.writeAsStringAsync(DECODED, JSON.stringify(data))
   return data
 }
 
 export async function loadStoredPack() {
+  const cached = await FileSystem.getInfoAsync(DECODED)
+  if (cached.exists) return { ...JSON.parse(await FileSystem.readAsStringAsync(DECODED)), fromCache: true }
   const info = await FileSystem.getInfoAsync(STORE)
   if (!info.exists) return null
-  return decodePack(await FileSystem.readAsStringAsync(STORE))
+  const data = decodePack(await FileSystem.readAsStringAsync(STORE))
+  await FileSystem.writeAsStringAsync(DECODED, JSON.stringify(data))
+  return data
 }
 
 export async function clearStoredPack() {
   await FileSystem.deleteAsync(STORE, { idempotent: true })
+  await FileSystem.deleteAsync(DECODED, { idempotent: true })
 }
 
 // Week end dates (inclusive, 7-day windows) from the newest date backwards.

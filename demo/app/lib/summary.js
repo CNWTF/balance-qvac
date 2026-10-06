@@ -42,5 +42,5 @@ export async function buildSummary(modelId, facts, hints) {
   try { pick = parseFirstJson(f.contentText).pick } catch { /* fall through */ }
   const chosen = candidates.find(q => q.id === pick) ?? candidates[0] // fallback keeps the demo deterministic
   return { questionId: chosen.id, question: chosen.text, modelPicked: chosen.id === pick, candidates: candidates.map(q => q.id),
-    text: body + `想請教專業者：${chosen.text}`, ms: Date.now() - t0 }
+    body, text: body + `想請教專業者：${chosen.text}`, ms: Date.now() - t0 }
 }

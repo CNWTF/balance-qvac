@@ -30,7 +30,7 @@ export default function App() {
   const [loadMs, setLoadMs] = useState<number | null>(null)
   const [data, setData] = useState<any>(null)
   const [week, setWeek] = useState(0)
-  const [summary, setSummary] = useState<{ text: string, ms: number, questionId: string } | null>(null)
+  const [summary, setSummary] = useState<{ body: string, question: string, ms: number, questionId: string } | null>(null)
   const [utterance, setUtterance] = useState('這週睡不好，週六晚上想去三溫暖，也想找健康管理師聊聊')
   const [draft, setDraft] = useState<any>(null)
   const [busy, setBusy] = useState(false)
@@ -46,7 +46,8 @@ export default function App() {
         const id = await loadModel({
           modelSrc: MODEL_URL,
           modelType: 'llamacpp-completion',
-          modelConfig: { ctx_size: 2048 },
+          // Samsung/Mali GPUs crash in the GPU backend during load (seen on Galaxy A32 5G); QVAC's own config example forces CPU on Samsung.
+          modelConfig: Platform.OS === 'android' ? { ctx_size: 2048, device: 'cpu' } : { ctx_size: 2048 },
           onProgress: (p: any) => { if (!cancelled) setPct(Math.round(p.percentage)) }
         } as any)
         idRef.current = id
@@ -106,7 +107,7 @@ export default function App() {
         <View style={s.card}>
           <Text style={s.h2}>我的資料</Text>
           {data
-            ? <Text style={s.meta}>已匯入：{data.fitCount}個三溫暖FIT檔與{data.nights.length}晚睡眠紀錄，在手機上解碼耗時{data.decodeMs} ms。資料只存在這支手機。</Text>
+            ? <Text style={s.meta}>已匯入：{data.fitCount}個三溫暖FIT檔與{data.nights.length}晚睡眠紀錄，匯入時在手機上解碼耗時{data.decodeMs} ms{data.fromCache ? '（本次開啟沿用解碼結果）' : ''}。資料只存在這支手機。</Text>
             : <Text style={s.meta}>尚未匯入。選取Balance資料包（.json），FIT檔會在手機上解碼。</Text>}
           <View style={s.row}>
             <Pressable style={[s.btn2, busy && s.btnOff]} onPress={importPack} disabled={busy}><Text style={s.btn2Text}>{data ? '重新匯入' : '匯入我的Garmin資料'}</Text></Pressable>
@@ -125,7 +126,9 @@ export default function App() {
             <Text style={s.btnText}>產生摘要</Text>
           </Pressable>
           {summary && <>
-            <Text style={s.body}>{summary.text}</Text>
+            <Text style={s.body}>{summary.body}</Text>
+            <Text style={s.body}>想請教專業者：</Text>
+            <Text style={s.question}>{summary.question}</Text>
             <Text style={s.meta}>{summary.questionId} · {summary.ms} ms</Text>
           </>}
         </View>
@@ -158,7 +161,8 @@ const s = StyleSheet.create({
   row: { flexDirection: 'row', gap: 8 },
   status: { color: '#E5E5EA', fontSize: 15 },
   meta: { color: '#8E8E99', fontSize: 12 },
-  body: { color: 'white', fontSize: 15, lineHeight: 22 },
+  body: { color: 'white', fontSize: 15, lineHeight: 24 },
+  question: { color: '#C7F9CC', fontSize: 16, lineHeight: 26, fontWeight: '600' },
   mono: { color: '#C7F9CC', fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 13 },
   input: { color: 'white', backgroundColor: '#0F0F14', borderRadius: 8, padding: 10, fontSize: 15, minHeight: 60 },
   btn: { backgroundColor: '#22C55E', borderRadius: 8, paddingVertical: 10, alignItems: 'center' },
