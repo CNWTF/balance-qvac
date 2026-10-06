@@ -52,3 +52,12 @@ Galaxy A32 5G (SM-A326BR/DS, 6 GB, Android 13, Mali GPU so CPU only). Three APKs
 | Not tested on the phone yet | Voice input (Whisper), photo → classify → VisionPsy / OCR, Japanese read-aloud (desktop tests passed for classify, ASR, OCR, VisionPsy) |
 
 Screenshots in `p1/screens/a32_*.png` contain demo data only.
+
+## Photo path fixes (2026-10-07 06:30–07:45)
+
+| Issue | Fix | Result |
+|---|---|---|
+| iOS: "Missing camera or camera roll permission" | Request camera / photo permission before opening the picker (`lib/picker.ts`) | Picker opens on iPhone |
+| iOS: OCR "ggml_gallocr_alloc_graph failed" on a 48 MP photo | `canvasSize: 1280`, `magRatio: 1`, retry on CPU | Fix shipped; awaiting iPhone retest |
+| iOS and Android: classifier "MobileNet GGUF weights not found" in the mobile worker bundle | Ship the 3 MB GGUF as an app asset (`metro.config.js` adds `.gguf`) and pass its path | A32: synthetic price list classified in 836 ms (other, 58%); VisionPsy described it correctly in 109.7 s incl. first download |
+| A32 venue OCR (synthetic price list 900×700) | — | All prices and hours read correctly in 84.6 s incl. first download |
