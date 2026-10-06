@@ -16,3 +16,13 @@ Notes
 - Without a `predict` cap the model sometimes kept generating after the JSON object (one summary took 185 s).
 - The held-out set was written after the date/price rules were fixed, but the professional-keyword rule was adjusted after seeing one held-out failure, so that field is not a clean held-out measurement. A fresh held-out set is next.
 - Numbers in summaries are rendered by `lib/recovery.mjs`; the model only picks fact ids and writes a digit-free question.
+
+## iPhone (2026-10-06, first on-device run)
+
+iPhone 18 Pro, iOS 27.0.1, Release build, Expo SDK 54, `@qvac/sdk` 0.21.0, MedPsy-1.7B `q4_k_m`. Synthetic data.
+
+| Step | Result |
+|---|---|
+| First launch: download + load | 72.4 s (includes the 1.28 GB download over Wi-Fi) |
+| Weekly summary (model picks question) | 767 ms, picked Q07 |
+| Intent → ServiceRequest (default sentence) | 526 ms; sauna / 2026-10-10 / evening / professional: all correct |
