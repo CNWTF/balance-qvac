@@ -130,7 +130,8 @@ export default function App() {
             <Text style={s.btnText}>產生摘要</Text>
           </Pressable>
           {summary && <>
-            <Text style={s.body}>{summary.body}</Text>
+            {/* One sentence per Text: iOS mis-measures long mixed CJK/Latin paragraphs and clips the last line. */}
+            {summary.body.split('。').filter(Boolean).map((line, i) => <Text key={i} style={s.body}>{line}。</Text>)}
             <Text style={s.body}>想請教專業者：</Text>
             <Text style={s.question}>{summary.question}</Text>
             <Text style={s.meta}>{summary.questionId} · {summary.ms} ms</Text>
@@ -165,8 +166,8 @@ const s = StyleSheet.create({
   row: { flexDirection: 'row', gap: 8 },
   status: { color: '#E5E5EA', fontSize: 15 },
   meta: { color: '#8E8E99', fontSize: 12 },
-  body: { color: 'white', fontSize: 15, lineHeight: 24 },
-  question: { color: '#C7F9CC', fontSize: 16, lineHeight: 26, fontWeight: '600' },
+  body: { color: 'white', fontSize: 15 },
+  question: { color: '#C7F9CC', fontSize: 16, fontWeight: '600' },
   mono: { color: '#C7F9CC', fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 13 },
   input: { color: 'white', backgroundColor: '#0F0F14', borderRadius: 8, padding: 10, fontSize: 15, minHeight: 60 },
   btn: { backgroundColor: '#22C55E', borderRadius: 8, paddingVertical: 10, alignItems: 'center' },
