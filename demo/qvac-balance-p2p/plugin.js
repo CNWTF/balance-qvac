@@ -35,6 +35,8 @@ function createNode(seedHex) {
             try {
               const msg = JSON.parse(line)
               if (msg.kind === 'hello') { peer.name = msg.name; peer.role = msg.role; continue }
+              // Reachability probe: answer at once so the sender can tell delivered from merely sent.
+              if (msg.kind === 'probe') { conn.write(JSON.stringify({ kind: 'probe-ack', at: msg.at, rx: Date.now() }) + '\n'); continue }
               node.inbox.push({ from: key, fromName: peer.name, fromRole: peer.role, at: Date.now(), msg })
             } catch { /* ignore malformed line */ }
           }
